@@ -5,20 +5,26 @@ import (
 	"log"
 	"sync"
 
-	"simple-multiplayer-service/pkg/client"
-	"simple-multiplayer-service/pkg/message"
+	"simple-multiplayer-service/internal/client"
+	"simple-multiplayer-service/internal/matchmaking"
+	"simple-multiplayer-service/internal/message"
+	"simple-multiplayer-service/internal/notification"
 )
 
 // ConnectionManager manages all active WebSocket connections
 type ConnectionManager struct {
-	clients map[string]*client.Client
-	mutex   sync.RWMutex
+	clients             map[string]*client.Client
+	mutex               sync.RWMutex
+	matchmakingService  *matchmaking.Service
+	notificationService *notification.Service
 }
 
 // NewConnectionManager creates a new connection manager
-func NewConnectionManager() *ConnectionManager {
+func NewConnectionManager(mmSvc *matchmaking.Service, notifSvc *notification.Service) *ConnectionManager {
 	return &ConnectionManager{
-		clients: make(map[string]*client.Client),
+		clients:             make(map[string]*client.Client),
+		matchmakingService:  mmSvc,
+		notificationService: notifSvc,
 	}
 }
 
@@ -60,4 +66,9 @@ func (cm *ConnectionManager) SendMessageToClient(message message.Message) error 
 	}
 
 	return targetClient.Connection.WriteJSON(message)
+}
+
+// StartMatchmakingService start the matchmaking service
+func (cm *ConnectionManager) StartMatchmakingService() {
+	cm.matchmakingService.Start()
 }

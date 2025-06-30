@@ -185,7 +185,7 @@
             const recipientId = recipientIdInput.value.trim();
             const messageContent = messageContentInput.value.trim();
             
-            if (!recipientId || !messageContent) {
+            if (!messageContent) {
                 addMessage('System', 'Please enter recipient ID and message', 'system');
                 return;
             }

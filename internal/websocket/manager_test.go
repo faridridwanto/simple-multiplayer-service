@@ -3,12 +3,18 @@ package websocket
 import (
 	"testing"
 
-	"simple-multiplayer-service/pkg/client"
+	"simple-multiplayer-service/internal/client"
+	"simple-multiplayer-service/internal/db/local"
+	"simple-multiplayer-service/internal/matchmaking"
+	"simple-multiplayer-service/internal/notification"
 )
 
 // TestConnectionManager tests the ConnectionManager functionality
 func TestConnectionManager(t *testing.T) {
-	manager := NewConnectionManager()
+	notifSvc := notification.NewNotificationService()
+	sessionDB := local.DB{}
+	mmSvc := matchmaking.NewMatchmakingService(10, sessionDB, notifSvc)
+	manager := NewConnectionManager(mmSvc, notifSvc)
 
 	// Create a mock client
 	client := &client.Client{

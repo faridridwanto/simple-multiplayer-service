@@ -7,13 +7,20 @@ import (
 	"testing"
 	"time"
 
+	"simple-multiplayer-service/internal/db/local"
+	"simple-multiplayer-service/internal/matchmaking"
+	"simple-multiplayer-service/internal/message"
+	"simple-multiplayer-service/internal/notification"
+
 	"github.com/gorilla/websocket"
-	"simple-multiplayer-service/pkg/message"
 )
 
 // TestSendMessageToClient tests the SendMessageToClient functionality
 func TestSendMessageToClient(t *testing.T) {
-	manager := NewConnectionManager()
+	notifSvc := notification.NewNotificationService()
+	sessionDB := local.DB{}
+	mmSvc := matchmaking.NewMatchmakingService(10, sessionDB, notifSvc)
+	manager := NewConnectionManager(mmSvc, notifSvc)
 
 	// Create a test server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +83,10 @@ func TestSendMessageToClient(t *testing.T) {
 
 // TestMultipleClients tests communication between multiple clients
 func TestMultipleClients(t *testing.T) {
-	manager := NewConnectionManager()
+	notifSvc := notification.NewNotificationService()
+	sessionDB := local.DB{}
+	mmSvc := matchmaking.NewMatchmakingService(10, sessionDB, notifSvc)
+	manager := NewConnectionManager(mmSvc, notifSvc)
 
 	// Create a test server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

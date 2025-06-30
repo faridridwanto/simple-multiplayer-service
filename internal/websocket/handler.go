@@ -6,10 +6,11 @@ import (
 	"net"
 	"net/http"
 
+	"simple-multiplayer-service/internal/client"
+	"simple-multiplayer-service/internal/message"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"simple-multiplayer-service/pkg/client"
-	"simple-multiplayer-service/pkg/message"
 )
 
 // Upgrader for WebSocket connections
@@ -31,26 +32,28 @@ func HandleWebSocket(manager *ConnectionManager, w http.ResponseWriter, r *http.
 		return
 	}
 
-	// Get the client's IP address
+	// Get the wsClient's IP address
 	ip, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		ip = r.RemoteAddr
 	}
 
-	// Create a unique ID for the client using UUID
+	// Create a unique ID for the wsClient using UUID
 	clientID := uuid.New().String()
 
-	// Create a new client
-	client := &client.Client{
-		ID:         clientID,
-		IPAddress:  ip,
-		Connection: conn,
+	// Create a new wsClient
+	wsClient := &client.Client{
+		ID:                  clientID,
+		IPAddress:           ip,
+		Connection:          conn,
+		MatchmakingService:  manager.matchmakingService,
+		NotificationService: manager.notificationService,
 	}
 
-	// Register the client
-	manager.RegisterClient(client)
+	// Register the wsClient
+	manager.RegisterClient(wsClient)
 
-	// Send the client their ID
+	// Send the wsClient their ID
 	welcomeMsg := message.Message{
 		From:    "server",
 		To:      clientID,
@@ -64,6 +67,9 @@ func HandleWebSocket(manager *ConnectionManager, w http.ResponseWriter, r *http.
 		return
 	}
 
-	// Start reading messages from the client
-	go client.ReadMessages()
+	// Start reading messages from the wsClient
+	go wsClient.ReadMessages()
+
+	// Start checking notifications from notification service
+	go wsClient.CheckNotifications()
 }
