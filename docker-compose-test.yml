@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  test:
+    image: golang:1.21-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: go test ./...

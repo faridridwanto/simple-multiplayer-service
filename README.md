@@ -11,7 +11,7 @@ A Go-based WebSocket service that allows users to connect, communicate with each
 
 ## Requirements
 
-- Go 1.24 or higher
+- Go 1.21 or higher
 - [gorilla/websocket](https://github.com/gorilla/websocket) package
 
 ## Installation
@@ -29,6 +29,8 @@ A Go-based WebSocket service that allows users to connect, communicate with each
 
 ## Running the Server
 
+### Running Locally
+
 Start the WebSocket server:
 
 ```
@@ -37,9 +39,66 @@ go run cmd/server/main.go
 
 The server will start on port 8080 by default. You can connect to the WebSocket endpoint at `ws://localhost:8080/ws`.
 
+### Running with Docker
+
+#### Using Docker
+
+Build and run the Docker image:
+
+```
+docker build -t simple-multiplayer-service .
+docker run -p 8080:8080 simple-multiplayer-service
+```
+
+#### Using Docker Compose
+
+Run the service using Docker Compose:
+
+```
+docker-compose up
+```
+
+To run in detached mode:
+
+```
+docker-compose up -d
+```
+
+To stop the service:
+
+```
+docker-compose down
+```
+
+#### Using Makefile
+
+The project includes a Makefile to simplify common operations:
+
+```
+# Show available commands
+make help
+
+# Build Docker image
+make build-docker
+
+# Run locally (outside Docker)
+make run-local
+
+# Run inside Docker
+make run-docker
+
+# Run with Docker Compose
+make run-docker-compose
+
+# Clean up build artifacts and Docker images
+make clean
+```
+
+The server will be accessible at `ws://localhost:8080/ws` just like when running locally.
+
 ## Using the Client
 
-1. Open the `client.html` file in a web browser.
+1. Open the `test-client.html` file in a web browser.
 2. Click the "Connect" button to establish a WebSocket connection.
 3. The server will assign you a connection ID, which will be displayed in the messages area.
 4. To send a message to another user:
@@ -55,14 +114,28 @@ The server will start on port 8080 by default. You can connect to the WebSocket 
 Run the unit tests with:
 
 ```
-go test -v
+go test ./...
 ```
+
+#### Using Makefile
+
+You can also use the Makefile to run tests:
+
+```
+# Run tests locally
+make test-local
+
+# Run tests inside Docker (uses docker-compose-test.yml)
+make test-docker
+```
+
+The `test-docker` command uses a separate `docker-compose-test.yml` file that creates a container with the Go toolchain installed, mounts the project directory, and runs the tests inside the container.
 
 ### Manual Testing
 
 For manual testing, you can:
 
-1. Open multiple instances of the `client.html` file in different browser windows.
+1. Open multiple instances of the `test-client.html` file in different browser windows.
 2. Connect each client to the server.
 3. Copy the connection ID from one client and use it as the recipient ID in another client.
 4. Send messages between clients to verify the functionality.
@@ -84,7 +157,7 @@ The project follows the standard Go module layout:
     - `client.go`: Defines the WebSocket client
   - `message/`: Contains the message implementation
     - `message.go`: Defines the message structure
-- `client.html`: A simple HTML/JavaScript client for manual testing
+- `test-client.html`: A simple HTML/JavaScript client for manual testing
 
 ## How It Works
 
