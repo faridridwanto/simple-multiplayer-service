@@ -14,13 +14,15 @@ type Service struct {
 	SessionNumber       int
 	SessionLimit        int
 	SessionQueue        chan message.MatchmakingRequest
+	ClientDisconnects   chan string
 	SessionDB           db.Session
 	NotificationService *notification.Service
 }
 
 func NewMatchmakingService(sessionLimit int, sessionDB db.Session, notificationService *notification.Service) *Service {
 	sessionQueue := make(chan message.MatchmakingRequest, 100)
-	return &Service{SessionLimit: sessionLimit, SessionQueue: sessionQueue, SessionDB: sessionDB, NotificationService: notificationService}
+	clientDisconnects := make(chan string, 100)
+	return &Service{SessionLimit: sessionLimit, SessionQueue: sessionQueue, ClientDisconnects: clientDisconnects, SessionDB: sessionDB, NotificationService: notificationService}
 }
 
 func (matchmakingService *Service) Start() {
@@ -55,6 +57,10 @@ func (matchmakingService *Service) Start() {
 			}
 			matchmakingService.NotificationService.Channel <- newSessionNotification
 			lookingForOpponent = ""
+		case clientID := <-matchmakingService.ClientDisconnects:
+			if lookingForOpponent == clientID {
+				lookingForOpponent = ""
+			}
 		}
 	}
 }

@@ -48,6 +48,7 @@ func HandleWebSocket(manager *ConnectionManager, w http.ResponseWriter, r *http.
 		Connection:          conn,
 		MatchmakingService:  manager.matchmakingService,
 		NotificationService: manager.notificationService,
+		Done:                make(chan struct{}),
 	}
 
 	// Register the wsClient

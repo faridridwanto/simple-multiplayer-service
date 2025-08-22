@@ -47,6 +47,7 @@ func (cm *ConnectionManager) UnregisterClient(clientID string) {
 	if _, exists := cm.clients[clientID]; exists {
 		delete(cm.clients, clientID)
 		log.Printf("Client unregistered: %s", clientID)
+		cm.matchmakingService.ClientDisconnects <- clientID
 	}
 }
 

@@ -20,6 +20,7 @@ type Client struct {
 	NotificationService *notification.Service
 	SendMessageFunc     func(message message.Message) error
 	UnregisterFunc      func(clientID string)
+	Done                chan struct{}
 }
 
 // HandleMessage processes incoming messages from clients
@@ -48,6 +49,7 @@ func (c *Client) ReadMessages() {
 	defer func() {
 		c.Connection.Close()
 		c.UnregisterFunc(c.ID)
+		close(c.Done)
 	}()
 
 	for {
@@ -60,14 +62,16 @@ func (c *Client) ReadMessages() {
 			break
 		}
 
-		log.Printf("Message from %s: %s", msg.From, msg.Content)
-
-		// Handling Matchmaking Request
-		var mmr message.MatchmakingRequest
-		err = json.Unmarshal([]byte(msg.Content), &mmr)
-		if err == nil && mmr.Type == message.MatchmakingRequestType {
-			c.HandleMatchmakingRequest(mmr)
-			continue
+		// Try to unmarshal for matchmaking request
+		var content map[string]interface{}
+		if err := json.Unmarshal([]byte(msg.Content), &content); err == nil {
+			if contentType, ok := content["type"].(string); ok && contentType == message.MatchmakingRequestType {
+				var mmr message.MatchmakingRequest
+				if err := json.Unmarshal([]byte(msg.Content), &mmr); err == nil {
+					c.HandleMatchmakingRequest(mmr)
+					continue
+				}
+			}
 		}
 
 		c.HandleMessage(msg)
@@ -122,6 +126,8 @@ func (c *Client) CheckNotifications() {
 					continue
 				}
 			}
+		case <-c.Done:
+			return
 		}
 	}
 }
